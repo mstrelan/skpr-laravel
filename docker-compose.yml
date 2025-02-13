@@ -32,7 +32,8 @@ services:
 
   node:
       image: skpr/node:22-v2-stable
-      command: /bin/bash -c "sleep infinity"
+      tty: true
+      stdin_open: true
       network_mode: service:nginx
       volumes:
           - ./:/data
