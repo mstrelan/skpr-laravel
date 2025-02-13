@@ -1,0 +1,36 @@
+name: Tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      docker:
+        image: docker:dind
+        options: --privileged
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Compose
+        run: docker compose up -d
+
+      - name: Wait for MySQL to be ready
+        run: |
+          for i in {1..60}; do
+            docker compose exec -T mysql-default mysqladmin ping -h localhost && break
+            sleep 1
+          done
+
+      - name: Run database migrations
+        run: docker compose exec -T php-cli php artisan migrate --force
+
+      - name: Run Laravel tests
+        run: docker compose exec -T php-cli php artisan test
