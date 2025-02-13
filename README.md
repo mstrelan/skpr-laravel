@@ -6,30 +6,23 @@
 - [Project Structure](#project-structure)
   - [Directory Structure](#directory-structure)
   - [Development Environment](#development-environment)
-  - [Production Environment](#production-environment)
 - [Getting Started](#getting-started)
   - [Clone the Repository](#clone-the-repository)
   - [Setting Up the Development Environment](#setting-up-the-development-environment)
 - [Usage](#usage)
-- [Production Environment](#production-environment-1)
-  - [Building and Running the Production Environment](#building-and-running-the-production-environment)
-- [Technical Details](#technical-details)
-- [Contributing](#contributing)
-  - [How to Contribute](#how-to-contribute)
 - [License](#license)
 
 
 ## Overview
 
-The **Laravel Docker Examples Project** offers practical and modular examples for Laravel developers to create efficient Docker environments for development and production. This project demonstrates modern Docker best practices, including multi-stage builds, modular configurations, and environment-specific customization. It is designed to be educational, flexible, and extendable, providing a solid foundation for Dockerizing Laravel applications.
+The **Laravel Docker Examples Project** offers practical and modular examples for Laravel developers to create efficient Docker environments for development. This project demonstrates modern Docker best practices, including multi-stage builds, modular configurations, and environment-specific customization. It is designed to be educational, flexible, and extendable, providing a solid foundation for Dockerizing Laravel applications.
 
 
 ## Project Structure
 
 The project is organized as a typical Laravel application, with the addition of a `docker` directory containing the Docker configurations and scripts. These are separated by environments and services. There are two main Docker Compose projects in the root directory:
 
-- **compose.dev.yaml**: Orchestrates the development environment.
-- **compose.prod.yaml**: Orchestrates the production environment.
+- **docker-compose.yml**: Orchestrates the development environment.
 
 ### Directory Structure
 
@@ -40,27 +33,11 @@ project-root/
 ├── docker/ 
 │   ├── common/ # Shared configurations
 │   ├── development/ # Development-specific configurations 
-│   ├── production/ # Production-specific configurations
-├── compose.dev.yaml # Docker Compose for development 
-├── compose.prod.yaml # Docker Compose for production 
+├── docker-compose.yml # Docker Compose for development 
 └── .env.example # Example environment configuration
 ```
 
 This modular structure ensures shared logic between environments while allowing environment-specific customizations.
-
-
-### Production Environment
-
-The production environment is configured using the `compose.prod.yaml` file. It is optimized for performance and security, using multi-stage builds and runtime-only dependencies. It uses a shared PHP-FPM multi-stage build with the target `production`.
-
-- **Optimized Images**: Multi-stage builds ensure minimal image size and enhanced security.
-- **Pre-Built Assets**: Assets are compiled during the build process, ensuring the container is ready to serve content immediately upon deployment.
-- **Health Checks**: Built-in health checks monitor service statuses and ensure smooth operation.
-- **Security Best Practices**: Minimizes the attack surface by excluding unnecessary packages and users.
-- **Docker Compose for Production**: Tailored for deploying Laravel applications with Nginx, PHP-FPM, Redis, and PostgreSQL.
-
-This environment is designed for easy deployment to any Docker-compatible hosting platform.
-
 
 ### Development Environment
 
@@ -110,139 +87,66 @@ Hint: adjust the `UID` and `GID` variables in the `.env` file to match your user
 2. Start the Docker Compose Services:
 
 ```bash
-docker compose -f compose.dev.yaml up -d
+docker compose up -d
 ```
 
 3. Install Laravel Dependencies:
 
 ```bash
-docker compose -f compose.dev.yaml exec workspace bash
-composer install
-npm install
-npm run dev
+docker compose exec php-cli make composer
+docker compose exec node make npm
+docker compose exec node make npm-dev
 ```
 
 4. Run Migrations:
 
 ```bash
-docker compose -f compose.dev.yaml exec workspace php artisan migrate
+docker compose exec php-cli make migrate
 ```
 
 5. Access the Application:
 
-Open your browser and navigate to [http://localhost](http://localhost).
+Open your browser and navigate to [http://127.0.0.1:8080](http://127.0.0.1:8080).
 
 ## Usage
 
 Here are some common commands and tips for using the development environment:
 
-### Accessing the Workspace Container
-
-The workspace sidecar container includes Composer, Node.js, NPM, and other tools necessary for Laravel development (e.g. assets building).
+### Accessing the PHP CLI Container
 
 ```bash
-docker compose -f compose.dev.yaml exec workspace bash
+docker compose exec php-cli bash
 ```
 
 ### Run Artisan Commands:
 
 ```bash
-docker compose -f compose.dev.yaml exec workspace php artisan migrate
+docker compose exec php-cli php artisan migrate
 ```
 
 ### Rebuild Containers:
 
 ```bash
-docker compose -f compose.dev.yaml up -d --build
+docker compose up -d --build
 ```
 
 ### Stop Containers:
 
 ```bash
-docker compose -f compose.dev.yaml down
+docker compose down
 ```
 
 ### View Logs:
 
 ```bash
-docker compose -f compose.dev.yaml logs -f
+docker compose logs -f
 ```
 
 For specific services, you can use:
 
 ```bash
-docker compose -f compose.dev.yaml logs -f web
+docker compose logs -f web
 ```
-
-## Production Environment
-
-The production environment is designed with security and efficiency in mind:
-
-- **Optimized Docker Images**: Uses multi-stage builds to minimize the final image size, reducing the attack surface.
-- **Environment Variables Management**: Sensitive data such as passwords and API keys are managed carefully to prevent exposure.
-- **User Permissions**: Containers run under non-root users where possible to follow the principle of least privilege.
-- **Health Checks**: Implemented to monitor the status of services and ensure they are functioning correctly.
-- **HTTPS Setup**: While not included in this example, it's recommended to configure SSL certificates and use HTTPS in a production environment.
-
-
-### Deploying
-
-The production image can be deployed to any Docker-compatible hosting environment, such as AWS ECS, Kubernetes, or a traditional VPS.
-
-## Technical Details
-
-- **PHP**: Version **8.3 FPM** is used for optimal performance in both development and production environments.
-- **Node.js**: Version **22.x** is used in the development environment for building frontend assets with Vite.
-- **PostgreSQL**: Version **16** is used as the database in the examples, but you can adjust the configuration to use MySQL if preferred.
-- **Redis**: Used for caching and session management, integrated into both development and production environments.
-- **Nginx**: Used as the web server to serve the Laravel application and handle HTTP requests.
-- **Docker Compose**: Orchestrates the services, simplifying the process of starting and stopping the environment.
-- **Health Checks**: Implemented in the Docker Compose configurations and Laravel application to ensure all services are operational.
-
-
-## Contributing
-
-Contributions are welcome! Whether you find a bug, have an idea for improvement, or want to add a new feature, your input is valuable.
-
-### How to Contribute
-
-1. **Fork the Repository:**
-
-   Click the "Fork" button at the top right of this page to create your own copy of the repository.
-
-2. **Clone Your Fork:**
-
-```bash
-    git clone https://github.com/your-user-name/laravel-docker-examples.git
-    cd laravel-docker-examples
-```
-
-3. Create a Branch:
-
-```bash
-    git checkout -b your-feature-branch
-```
-
-4. Make Your Changes.
-
-    Implement your changes or additions.
-
-5. Commit Your Changes:
-
-```bash
-git commit -m "Description of changes"
-```
-
-6. Push to Your Fork:
-
-```bash
-    git push origin feature-branch
-```
-
-7. Submit a Pull Request:
-    - Go to the original repository.
-    - Click on "Pull Requests" and then "New Pull Request."
-    - Select your fork and branch, and submit your pull request.
 
 ## License
 
